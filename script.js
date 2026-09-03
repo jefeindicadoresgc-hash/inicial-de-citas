@@ -1,4 +1,3 @@
-// [SECCIÓN 1: CONFIGURACIÓN FIREBASE Y VARIABLES GLOBALES]
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
 
@@ -6,17 +5,13 @@ const firebaseConfig = {
     apiKey: "AIzaSyA-x8ZZvJXAOK7Q18PVWPybmfPZ7xDBNHo",
     authDomain: "tablero-pruebas.firebaseapp.com",
     databaseURL: "https://tablero-pruebas-default-rtdb.firebaseio.com",
-    projectId: "tablero-pruebas",
-    storageBucket: "tablero-pruebas.firebasestorage.app",
-    messagingSenderId: "900913447132",
-    appId: "1:900913447132:web:fd3b5cc73af4263d69b419"
+    projectId: "tablero-pruebas"
 };
 
 let app, db;
 try {
     app = initializeApp(firebaseConfig);
     db = getDatabase(app);
-    
     onValue(ref(db, 'citas_diarias'), (snapshot) => {
         renderizarTablas(snapshot.val() || {});
     });
@@ -25,22 +20,17 @@ try {
 }
 
 let listaMotivos = ["Se le hizo tarde", "Confundió el horario", "Canceló la cita", "Imprevisto personal/ laboral", "Problema de salud"];
-let folioEnEspera = null; // Variable global para el Modal MAC
+let folioEnEspera = null; 
 
-
-// [SECCIÓN 2: LECTURA Y PROCESAMIENTO DEL EXCEL]
+// PROCESAMIENTO EXCEL
 const inputExcel = document.getElementById('excelFile');
-
-// Limpiar el input para permitir recargar el mismo archivo
 if(inputExcel) {
     inputExcel.addEventListener('click', function() { this.value = null; });
-
     inputExcel.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
-
         reader.onload = function(evt) {
             try {
                 const data = new Uint8Array(evt.target.result);
@@ -53,8 +43,6 @@ if(inputExcel) {
                 let records = {};
                 for (let i = 0; i < jsonDatos.length; i++) {
                     let fila = jsonDatos[i];
-                    
-                    // Columna L (11) = Estatus
                     let estatus = fila[11] ? fila[11].toString().trim().toUpperCase() : "";
                     
                     if (estatus === 'INGRESADA') {
@@ -63,13 +51,11 @@ if(inputExcel) {
                         
                         let fechaRaw = fila[1];
                         let fecha = fechaRaw instanceof Date ? fechaRaw.toLocaleDateString('es-MX') : fila[1];
-                        
                         let horaRaw = fila[2];
                         let hora = horaRaw instanceof Date ? horaRaw.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : fila[2];
 
                         let placas = fila[6] ? fila[6].toString().trim() : 'S/P';
                         let vin = fila[7] ? fila[7].toString().trim() : 'S/V';
-
                         let servicio = jsonDatos[i+1]?.[4] || "";
                         let manoObra = jsonDatos[i+1]?.[5] || "";
                         let detalle = (servicio && manoObra) ? `${servicio} | ${manoObra}` : `${servicio}${manoObra}`;
@@ -84,23 +70,14 @@ if(inputExcel) {
                         };
                     }
                 }
-
-                if (db) {
-                    set(ref(db, 'citas_diarias'), records);
-                } else {
-                    renderizarTablas(records);
-                }
-
-            } catch (errLectura) {
-                console.error("Error al leer Excel: ", errLectura);
-            }
+                if (db) set(ref(db, 'citas_diarias'), records);
+            } catch (err) { console.error("Error Excel: ", err); }
         };
         reader.readAsArrayBuffer(file);
     });
 }
 
-
-// [SECCIÓN 3: RENDERIZADO (DOBLE ORDENAMIENTO, COMENTARIOS Y ADMIN)]
+// RENDERIZADO DE TABLAS
 function renderizarTablas(datos) {
     const tbodyPrepiking = document.getElementById('tbody-prepiking');
     const tbodyNoShow = document.getElementById('tbody-noshow');
@@ -111,6 +88,7 @@ function renderizarTablas(datos) {
     
     const headPrepiking = document.getElementById('thead-prepiking');
     const headNoShow = document.getElementById('thead-noshow');
+    
     if (!document.getElementById('th-admin-pre')) {
         if(rol === 'admin') {
             headPrepiking.innerHTML += `<th id="th-admin-pre" style="color:red;">Admin</th>`;
@@ -181,10 +159,8 @@ function renderizarTablas(datos) {
     asignarEventosDinamicos();
 }
 
-
-// [SECCIÓN 4: LÓGICA DE EVENTOS DINÁMICOS Y MODAL MAC]
+// EVENTOS Y LÓGICA
 function asignarEventosDinamicos() {
-    // 1. Asistencia y Calculo de Retardos (GIF)
     document.querySelectorAll('.sel-asistencia').forEach(el => {
         el.addEventListener('change', (e) => {
             let val = e.target.value;
@@ -199,27 +175,23 @@ function asignarEventosDinamicos() {
             let ahora = new Date();
             let horaActualStr = ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-            // Lógica del Castigo GIF (Retardo de 20+ mins)
             if (val === 'Sí') {
-                let horaCita = e.target.dataset.hora; // ej "07:00"
+                let horaCita = e.target.dataset.hora;
                 if (horaCita) {
                     let [h, m] = horaCita.split(':').map(Number);
                     let fechaCita = new Date();
                     fechaCita.setHours(h, m, 0, 0);
                     
-                    let diffMinutos = (ahora - fechaCita) / 60000;
-                    if (diffMinutos >= 20) {
-                        let randomGif = Math.floor(Math.random() * 4) + 1; // Número entre 1 y 4
-                        document.getElementById('tardyGif').src = `gif/${randomGif}.gif`;
+                    if (((ahora - fechaCita) / 60000) >= 20) {
+                        let randomGif = Math.floor(Math.random() * 4) + 1;
+                        document.getElementById('tardyGif').src = `./gif/${randomGif}.gif`; // Ruta explícita para GitHub
                         document.getElementById('gifOverlay').style.display = 'flex';
                         setTimeout(() => { document.getElementById('gifOverlay').style.display = 'none'; }, 3000);
                     }
                 }
             }
             
-            update(ref(db, `citas_diarias/${folio}`), {
-                asistio: val, timeAsis: horaActualStr, calif: "" 
-            });
+            update(ref(db, `citas_diarias/${folio}`), { asistio: val, timeAsis: horaActualStr, calif: "" });
         });
     });
 
@@ -227,14 +199,10 @@ function asignarEventosDinamicos() {
         el.addEventListener('click', (e) => update(ref(db, `citas_diarias/${e.target.dataset.folio}`), { asistio: "", timeAsis: "" }));
     });
 
-    // Comentarios
     document.querySelectorAll('.inp-comentario').forEach(el => {
-        el.addEventListener('change', (e) => {
-            update(ref(db, `citas_diarias/${e.target.dataset.folio}`), { comentarios: e.target.value });
-        });
+        el.addEventListener('change', (e) => update(ref(db, `citas_diarias/${e.target.dataset.folio}`), { comentarios: e.target.value }));
     });
 
-    // Inputs de No Show
     document.querySelectorAll('.sel-motivo, .sel-reagendo, .inp-fecha').forEach(el => {
         el.addEventListener('change', (e) => {
             let f = e.target.dataset.folio;
@@ -244,17 +212,13 @@ function asignarEventosDinamicos() {
         });
     });
 
-    // Eliminar Cita (Solo Admin)
     document.querySelectorAll('.btn-eliminar-admin').forEach(el => {
         el.addEventListener('click', (e) => {
             let f = e.target.dataset.folio;
-            if(confirm("¿Seguro que deseas borrar permanentemente el Folio " + f + "?")) {
-                set(ref(db, `citas_diarias/${f}`), null);
-            }
+            if(confirm("¿Seguro que deseas borrar permanentemente el Folio " + f + "?")) set(ref(db, `citas_diarias/${f}`), null);
         });
     });
 
-    // Calificación y Animaciones Finales
     document.querySelectorAll('.sel-calif').forEach(el => {
         el.addEventListener('change', (e) => {
             let val = e.target.value; if(!val) return;
@@ -281,13 +245,10 @@ function asignarEventosDinamicos() {
     });
 }
 
-// Botones del Modal MAC (Eventos estáticos)
 if(document.getElementById('btnConfirmNoShow')) {
     document.getElementById('btnConfirmNoShow').addEventListener('click', () => {
         if(folioEnEspera) {
-            update(ref(db, `citas_diarias/${folioEnEspera}`), {
-                asistio: 'No', timeAsis: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), calif: "" 
-            });
+            update(ref(db, `citas_diarias/${folioEnEspera}`), { asistio: 'No', timeAsis: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), calif: "" });
         }
         document.getElementById('modalNoShow').style.display = 'none';
         folioEnEspera = null;
@@ -303,8 +264,7 @@ if(document.getElementById('btnConfirmNoShow')) {
     });
 }
 
-
-// [SECCIÓN 5: INTERFAZ, CANDADO, ROLES Y CLIENTES SIN CITA]
+// ROLES Y FUNCIONES ADMIN
 if(document.getElementById('btnUnlock')) {
     document.getElementById('btnUnlock').addEventListener('click', () => {
         let pin = prompt("Ingresa el código de acceso:");
@@ -312,12 +272,10 @@ if(document.getElementById('btnUnlock')) {
         
         if (pin === '0520') {
             select.innerHTML = `<option value="asesor">👤 Perfil: Asesor</option><option value="citas">📋 Perfil: Citas</option>`;
-            select.value = 'citas';
-            select.dispatchEvent(new Event('change'));
+            select.value = 'citas'; select.dispatchEvent(new Event('change'));
         } else if (pin === '2099') {
             select.innerHTML = `<option value="asesor">👤 Perfil: Asesor</option><option value="citas">📋 Perfil: Citas</option><option value="admin">⚙️ Perfil: Super Admin</option>`;
-            select.value = 'admin';
-            select.dispatchEvent(new Event('change'));
+            select.value = 'admin'; select.dispatchEvent(new Event('change'));
         } else if (pin) {
             alert("❌ Código incorrecto.");
         }
@@ -327,13 +285,10 @@ if(document.getElementById('btnUnlock')) {
 if(document.getElementById('userRole')) {
     document.getElementById('userRole').addEventListener('change', function() {
         let rol = this.value;
-        
         document.getElementById('btnTabNoShow').style.display = (rol === 'citas' || rol === 'admin') ? 'block' : 'none';
         document.getElementById('admin-controls').style.display = (rol === 'admin') ? 'flex' : 'none';
         document.getElementById('uploadArea').style.display = (rol === 'citas' || rol === 'admin') ? 'block' : 'none';
-        document.getElementById('btnSinCita').style.display = 'block';
-
-        if(rol === 'asesor') { document.querySelector('[data-tab="prepiking"]').click(); }
+        if(rol === 'asesor') document.querySelector('[data-tab="prepiking"]').click();
         get(ref(db, 'citas_diarias')).then(snap => renderizarTablas(snap.val() || {}));
     });
 }
@@ -349,10 +304,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 if(document.getElementById('btnAgregarMotivo')) {
     document.getElementById('btnAgregarMotivo').addEventListener('click', () => {
         let nuevo = prompt("Nuevo motivo de NO SHOW:");
-        if(nuevo && nuevo.trim() !== "") { 
-            listaMotivos.push(nuevo); 
-            get(ref(db, 'citas_diarias')).then(s => renderizarTablas(s.val() || {})); 
-        }
+        if(nuevo && nuevo.trim() !== "") { listaMotivos.push(nuevo); get(ref(db, 'citas_diarias')).then(s => renderizarTablas(s.val() || {})); }
     });
 }
 
@@ -361,51 +313,42 @@ if(document.getElementById('btnQuitarMotivo')) {
         let listadoTxt = listaMotivos.map((m, i) => `${i + 1}. ${m}`).join("\n");
         let idx = prompt("Ingresa el NÚMERO del motivo que deseas eliminar:\n\n" + listadoTxt);
         if(idx && !isNaN(idx) && idx > 0 && idx <= listaMotivos.length) {
-            listaMotivos.splice(idx - 1, 1);
-            alert("Motivo eliminado exitosamente.");
-            get(ref(db, 'citas_diarias')).then(s => renderizarTablas(s.val() || {})); 
+            listaMotivos.splice(idx - 1, 1); alert("Motivo eliminado."); get(ref(db, 'citas_diarias')).then(s => renderizarTablas(s.val() || {})); 
         }
     });
 }
 
-// Limpiar Base EXCEPTO los No Show
 if(document.getElementById('btnLimpiarBase')) {
     document.getElementById('btnLimpiarBase').addEventListener('click', () => {
-        if(confirm("⚠️ ATENCIÓN: ¿Deseas limpiar las citas terminadas del día?\n\n(Las citas marcadas como NO SHOW se quedarán guardadas en la pantalla).")) {
+        if(confirm("⚠️ ATENCIÓN: ¿Deseas limpiar las citas del día?\n\n(Los NO SHOW y los autos procesados en el TALLER quedarán protegidos).")) {
             let pin = prompt("Ingresa código de Admin (2099):");
             if (pin === '2099') {
                 get(ref(db, 'citas_diarias')).then(snap => {
                     let datos = snap.val() || {};
                     let datosRetenidos = {};
                     
-                    // Solo conservamos las que están en "No"
                     for(let folio in datos) {
-                        if(datos[folio].asistio === 'No') {
+                        if(datos[folio].asistio === 'No' || (datos[folio].estado_taller && datos[folio].estado_taller !== '')) {
                             datosRetenidos[folio] = datos[folio];
                         }
                     }
-                    
                     set(ref(db, 'citas_diarias'), datosRetenidos).then(() => {
-                        alert("✅ Día reiniciado. Los NO SHOW se han conservado.");
+                        alert("✅ Día reiniciado. Las citas de Taller y No Show están seguras.");
+                        document.getElementById('tbody-prepiking').innerHTML = '';
                     });
                 });
-            } else {
-                alert("Código incorrecto.");
-            }
+            } else { alert("❌ Código incorrecto."); }
         }
     });
 }
 
-// Lógica de SIN CITA (Creación de Fila Integrada en Tabla)
+// SIN CITA INTEGRADO
 if(document.getElementById('btnSinCita')) {
     document.getElementById('btnSinCita').addEventListener('click', () => {
-        // Evitar que abran múltiples filas al mismo tiempo
         if(document.getElementById('row-sin-cita')) return;
-        
         const tbody = document.getElementById('tbody-prepiking');
         const tr = document.createElement('tr');
-        tr.id = 'row-sin-cita';
-        tr.style.background = 'rgba(0, 68, 255, 0.2)'; // Brillo azul distintivo
+        tr.id = 'row-sin-cita'; tr.style.background = 'rgba(0, 68, 255, 0.2)';
         
         let hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         let fecha = new Date().toLocaleDateString('es-MX');
@@ -425,14 +368,11 @@ if(document.getElementById('btnSinCita')) {
                 <button onclick="document.getElementById('row-sin-cita').remove()" style="background:#ff0000; color:#fff; border:1px solid #fff; padding:8px 15px; cursor:pointer; font-family:'Bebas Neue'; font-size:1.2rem; margin-left:5px; border-radius:3px;">❌</button>
             </td>
         `;
-        // Insertamos la fila al principio de la tabla
         tbody.prepend(tr);
 
-        // Guardar la fila directamente a Firebase
         document.getElementById('btnSaveInline').addEventListener('click', () => {
             let f = document.getElementById('inline-folio').value.trim();
             if(!f) { alert("⚠️ El Folio es obligatorio."); return; }
-            
             let nuevaCita = {
                 Folio: f, Fecha: fecha, Asesor: 'SIN CITA', Hora: hora,
                 Cliente: document.getElementById('inline-cliente').value.toUpperCase(),
@@ -443,10 +383,7 @@ if(document.getElementById('btnSinCita')) {
                 asistio: "Sí", timeAsis: hora, calif: "", comentarios: "",
                 motivo: "", reagendo: "", fechaReagendo: "", oculto: false
             };
-            
-            update(ref(db, `citas_diarias/${f}`), nuevaCita).then(() => {
-                document.getElementById('row-sin-cita').remove();
-            });
+            update(ref(db, `citas_diarias/${f}`), nuevaCita).then(() => document.getElementById('row-sin-cita').remove());
         });
     });
 }
