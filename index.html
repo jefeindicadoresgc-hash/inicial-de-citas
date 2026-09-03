@@ -1,0 +1,72 @@
+<!-- [SECCIÓN 1: HEAD Y LIBRERÍAS] -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Citas - Smash Edition</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+    <!-- [SECCIÓN 2: CONTROLES SUPERIORES (BARRA Y PERFIL)] -->
+    <div class="top-bar">
+        <div id="admin-controls" style="display:none;">
+            <button class="btn-admin" id="btnAgregarMotivo">+ Agregar Motivo NO SHOW</button>
+        </div>
+        <select id="userRole" class="role-selector">
+            <option value="asesor">👤 Perfil: Asesor</option>
+            <option value="citas">📋 Perfil: Citas</option>
+            <option value="admin">⚙️ Perfil: Super Admin</option>
+        </select>
+    </div>
+
+    <h1>PREPIKING</h1>
+
+    <!-- [SECCIÓN 3: ÁREA DE CARGA Y PESTAÑAS] -->
+    <div class="upload-zone">
+        <input type="file" id="excelFile" accept=".xls,.xlsx" style="display: none;">
+        <button class="btn-upload" onclick="document.getElementById('excelFile').click()">
+            ▶ CARGAR EXCEL AL SERVIDOR
+        </button>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="prepiking">PREPIKING</button>
+        <button class="tab-btn" id="btnTabNoShow" data-tab="noshow" style="display: none;">NO SHOW</button>
+    </div>
+
+    <!-- [SECCIÓN 4: TABLAS Y ANIMACIONES] -->
+    <div class="ko-splash" id="ko-anim">¡K.O.!</div>
+
+    <!-- PREPIKING -->
+    <div class="table-container active" id="tab-prepiking">
+        <table id="tabla-prepiking">
+            <thead>
+                <tr>
+                    <th>Asesor</th><th>Fecha</th><th>Hora</th><th>Folio</th>
+                    <th>Cliente</th><th>Vehículo</th><th>Servicio</th>
+                    <th>Asistencia</th><th>Calificación</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-prepiking"></tbody>
+        </table>
+    </div>
+
+    <!-- NO SHOW -->
+    <div class="table-container" id="tab-noshow">
+        <table id="tabla-noshow">
+            <thead>
+                <tr>
+                    <th>Asesor</th><th>Fecha</th><th>Folio</th><th>Cliente</th><th>Vehículo</th>
+                    <th>Motivo de NO SHOW</th><th>¿Reagendó?</th><th>Fecha Reagendo</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-noshow"></tbody>
+        </table>
+    </div>
+
+    <!-- Vincular el script de JS como módulo -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
