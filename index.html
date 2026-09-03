@@ -11,20 +11,25 @@
 
     <!-- [SECCIÓN 2: CONTROLES SUPERIORES (BARRA Y PERFIL)] -->
     <div class="top-bar">
-        <div id="admin-controls" style="display:none;">
-            <button class="btn-admin" id="btnAgregarMotivo">+ Agregar Motivo NO SHOW</button>
+        <div id="admin-controls" style="display:none; gap: 10px;">
+            <button class="btn-admin" id="btnAgregarMotivo">+ Motivo</button>
+            <button class="btn-admin" id="btnQuitarMotivo" style="background:#ff5f57;">- Quitar Motivo</button>
+            <button class="btn-admin" id="btnLimpiarBase" style="background:#ff0000; color:white; margin-left: 20px;">⚠️ Limpiar Día</button>
         </div>
-        <select id="userRole" class="role-selector">
-            <option value="asesor">👤 Perfil: Asesor</option>
-            <option value="citas">📋 Perfil: Citas</option>
-            <option value="admin">⚙️ Perfil: Super Admin</option>
-        </select>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <!-- Botón visible para todos por defecto -->
+            <button id="btnSinCita" style="background:var(--smash-blue); color:white; font-family:'Bebas Neue'; font-size:1.5rem; border:2px solid #fff; padding:5px 15px; cursor:pointer; border-radius:5px;">+ AGREGAR SIN CITA</button>
+            <select id="userRole" class="role-selector">
+                <option value="asesor">👤 Perfil: Asesor</option>
+            </select>
+            <button id="btnUnlock" style="background:transparent; border:none; cursor:pointer; font-size:1.5rem; text-shadow: 0 0 5px #00ffff;" title="Desbloquear Perfiles">🔒</button>
+        </div>
     </div>
 
-    <h1>PREPIKING</h1>
+    <h1 style="margin-bottom: 0;">PREPIKING</h1>
+    <h2 style="text-align: center; color: var(--smash-blue); font-family: 'Bebas Neue', cursive; letter-spacing: 2px; margin-top: 0; font-size: 2.5rem;">HYUNDAI COATZA</h2>
 
-    <!-- [SECCIÓN 3: ÁREA DE CARGA Y PESTAÑAS] -->
-    <div class="upload-zone">
+    <div class="upload-zone" id="uploadArea" style="display:none;">
         <input type="file" id="excelFile" accept=".xls,.xlsx" style="display: none;">
         <button class="btn-upload" onclick="document.getElementById('excelFile').click()">
             ▶ CARGAR EXCEL AL SERVIDOR
@@ -36,29 +41,44 @@
         <button class="tab-btn" id="btnTabNoShow" data-tab="noshow" style="display: none;">NO SHOW</button>
     </div>
 
-    <!-- [SECCIÓN 4: TABLAS Y ANIMACIONES] -->
     <div class="ko-splash" id="ko-anim">¡K.O.!</div>
 
-    <!-- PREPIKING -->
+    <div id="gifOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center;">
+        <img id="tardyGif" src="" style="max-width: 80%; max-height: 80%; border: 5px solid red; border-radius: 15px; box-shadow: 0 0 30px red;">
+    </div>
+
+    <div id="modalNoShow" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center;">
+        <div class="card">
+            <div class="mac-header">
+                <span class="red"></span><span class="yellow"></span><span class="green"></span>
+            </div>
+            <h3 class="card-title">⚠️ Confirmación Requerida</h3>
+            <p class="card-description">¿Estás seguro que el cliente NO ASISTIÓ? Esta cita pasará al panel de NO SHOW.</p>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button id="btnCancelNoShow" style="padding:8px 15px; border-radius:5px; border:none; background:#333; color:#fff; cursor:pointer; font-family:'Teko', sans-serif; font-size:1.2rem;">Cancelar</button>
+                <button id="btnConfirmNoShow" style="padding:8px 15px; border-radius:5px; border:none; background:#ff5f57; color:#fff; cursor:pointer; font-family:'Teko', sans-serif; font-size:1.2rem; text-shadow:1px 1px 2px #000;">Sí, No Asistió</button>
+            </div>
+        </div>
+    </div>
+
     <div class="table-container active" id="tab-prepiking">
         <table id="tabla-prepiking">
             <thead>
-                <tr>
+                <tr id="thead-prepiking">
                     <th>Asesor</th><th>Fecha</th><th>Hora</th><th>Folio</th>
-                    <th>Cliente</th><th>Vehículo</th><th>Servicio</th>
-                    <th>Asistencia</th><th>Calificación</th>
+                    <th>Cliente</th><th>Vehículo</th><th>Serie (VIN)</th><th>Placas</th><th>Servicio</th>
+                    <th>Asistencia</th><th>Calificación</th><th>Comentarios</th>
                 </tr>
             </thead>
             <tbody id="tbody-prepiking"></tbody>
         </table>
     </div>
 
-    <!-- NO SHOW -->
     <div class="table-container" id="tab-noshow">
         <table id="tabla-noshow">
             <thead>
-                <tr>
-                    <th>Asesor</th><th>Fecha</th><th>Folio</th><th>Cliente</th><th>Vehículo</th>
+                <tr id="thead-noshow">
+                    <th>Asesor</th><th>Fecha</th><th>Folio</th><th>Cliente</th><th>Vehículo</th><th>Serie (VIN)</th><th>Placas</th>
                     <th>Motivo de NO SHOW</th><th>¿Reagendó?</th><th>Fecha Reagendo</th>
                 </tr>
             </thead>
