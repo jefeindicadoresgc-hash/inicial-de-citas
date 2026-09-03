@@ -184,7 +184,8 @@ function asignarEventosDinamicos() {
                     
                     if (((ahora - fechaCita) / 60000) >= 20) {
                         let randomGif = Math.floor(Math.random() * 4) + 1;
-                        document.getElementById('tardyGif').src = `./gif/${randomGif}.gif`; // Ruta explícita para GitHub
+                        // CORRECCIÓN: Busca el GIF en la raíz de tu repositorio de GitHub
+                        document.getElementById('tardyGif').src = `./${randomGif}.gif`; 
                         document.getElementById('gifOverlay').style.display = 'flex';
                         setTimeout(() => { document.getElementById('gifOverlay').style.display = 'none'; }, 3000);
                     }
