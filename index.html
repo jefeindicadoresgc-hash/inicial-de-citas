@@ -11,11 +11,11 @@
     <!-- CONTROLES SUPERIORES -->
     <div class="top-bar">
         <div id="admin-controls" style="display:none; gap: 10px;">
-            <button class="btn-admin" id="btnAgregarMotivo">+ Motivo</button>
-            <button class="btn-admin" id="btnQuitarMotivo" style="background:#ff5f57;">- Quitar Motivo</button>
+            <button class="btn-admin" id="btnConfigMotivos" style="background:#ff9900;">⚙️ Configurar Motivos</button>
             <button class="btn-admin" id="btnLimpiarBase" style="background:#ff0000; color:white; margin-left: 20px;">⚠️ Limpiar Día</button>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
+            <button id="btnGarantia" style="display:none; background:#8a2be2; color:white; font-family:'Bebas Neue'; font-size:1.5rem; border:2px solid #fff; padding:5px 15px; cursor:pointer; border-radius:5px;">+ AGREGAR GARANTÍA</button>
             <button id="btnSinCita" style="background:var(--smash-blue); color:white; font-family:'Bebas Neue'; font-size:1.5rem; border:2px solid #fff; padding:5px 15px; cursor:pointer; border-radius:5px;">+ AGREGAR SIN CITA</button>
             <select id="userRole" class="role-selector">
                 <option value="asesor">👤 Perfil: Asesor</option>
@@ -39,27 +39,72 @@
     <div class="tabs">
         <button class="tab-btn active" data-tab="prepiking">PREPIKING</button>
         <button class="tab-btn" id="btnTabNoShow" data-tab="noshow" style="display: none;">NO SHOW</button>
+        <button class="tab-btn" id="btnTabEntregados" data-tab="entregados" style="display: none; background:#00ff00; color:#000;">ENTREGADOS (7 DÍAS)</button>
     </div>
 
     <!-- MODALES Y ANIMACIONES -->
     <div class="ko-splash" id="ko-anim">¡K.O.!</div>
 
-    <!-- GIF de Retardo -->
     <div id="gifOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center;">
         <img id="tardyGif" src="" style="max-width: 80%; max-height: 80%; border: 5px solid red; border-radius: 15px; box-shadow: 0 0 30px red;">
+    </div>
+
+    <!-- MODAL ACTUALIZACIONES (PARCHE 24 HRS) -->
+    <div id="modalPatchNotes" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:10000; align-items:center; justify-content:center;">
+        <div class="card" style="width: 500px; border-color: #00ffff; box-shadow: 0 0 20px #00ffff;">
+            <h3 class="card-title" style="color: #00ffff; font-size: 2.2rem; font-family: 'Bebas Neue'; text-align: center; margin-top:0;">🚀 ACTUALIZACIÓN DE SISTEMA</h3>
+            <div style="color: #fff; font-family: 'Arial', sans-serif; font-size: 1rem; line-height: 1.5;">
+                <p>Nuevas funciones aplicadas:</p>
+                <ul style="padding-left: 20px; color:#ccc;">
+                    <li><strong style="color:#00ffff;">Garantías Integradas:</strong> Nuevo botón morado para registrar garantías (formato de hora manual en 24hrs).</li>
+                    <li><strong style="color:#00ffff;">Placas Editables:</strong> Ahora puedes corregir las placas directamente desde la tabla principal.</li>
+                    <li><strong style="color:#00ffff;">Panel de Entregas (7 Días):</strong> Pestaña exclusiva para visualizar y eliminar (Admin) las unidades entregadas.</li>
+                    <li><strong style="color:#00ffff;">Protección de Excel:</strong> El sistema ahora respeta los No Show y autos sin calificar al cargar un nuevo archivo.</li>
+                </ul>
+            </div>
+            <div style="display:flex; justify-content:center; margin-top:20px;">
+                <button id="btnCerrarPatch" style="padding:10px 30px; background:#00ffff; color:#000; border:none; font-family:'Bebas Neue'; font-size:1.5rem; cursor:pointer; font-weight:bold; border-radius: 5px;">¡ENTENDIDO!</button>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL CONFIRMACIÓN MAC (NO SHOW) -->
     <div id="modalNoShow" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center;">
         <div class="card">
-            <div class="mac-header">
-                <span class="red"></span><span class="yellow"></span><span class="green"></span>
-            </div>
+            <div class="mac-header"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
             <h3 class="card-title">⚠️ Confirmación Requerida</h3>
             <p class="card-description">¿Estás seguro que el cliente NO ASISTIÓ? Esta cita pasará al panel de NO SHOW.</p>
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
                 <button id="btnCancelNoShow" style="padding:8px 15px; border-radius:5px; border:none; background:#333; color:#fff; cursor:pointer; font-family:'Teko', sans-serif; font-size:1.2rem;">Cancelar</button>
                 <button id="btnConfirmNoShow" style="padding:8px 15px; border-radius:5px; border:none; background:#ff5f57; color:#fff; cursor:pointer; font-family:'Teko', sans-serif; font-size:1.2rem; text-shadow:1px 1px 2px #000;">Sí, No Asistió</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMACIÓN MAC (ENTREGAR UNIDAD) -->
+    <div id="modalEntregar" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center;">
+        <div class="card" style="border-color:#00ff00;">
+            <div class="mac-header"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+            <h3 class="card-title" style="color:#00ff00;">✔️ Confirmación de Entrega</h3>
+            <p class="card-description">¿Confirmas la entrega de la unidad?</p>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button id="btnCancelEntregar" style="padding:8px 15px; border-radius:5px; border:none; background:#333; color:#fff; cursor:pointer; font-family:'Teko', sans-serif; font-size:1.2rem;">Rechazar</button>
+                <button id="btnConfirmEntregar" style="padding:8px 15px; border-radius:5px; border:none; background:#00ff00; color:#000; cursor:pointer; font-family:'Teko', sans-serif; font-size:1.2rem; font-weight:bold;">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL MOTIVOS -->
+    <div id="modalMotivos" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center;">
+        <div class="card" style="width: 450px; max-height: 80vh; display: flex; flex-direction: column; border-color: #ff9900; box-shadow: 0 0 20px #ff9900;">
+            <h3 class="card-title" style="color: #ff9900; font-size: 2rem; font-family: 'Bebas Neue'; text-align: center;">⚙️ MOTIVOS DE NO SHOW</h3>
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <input type="text" id="nuevoMotivoInput" placeholder="Escribe un nuevo motivo..." style="flex:1; padding:10px; font-size:1.2rem; background:#111; color:#fff; border:1px solid #555;">
+                <button id="btnGuardarNuevoMotivo" style="background:#ff9900; color:#000; border:none; font-family:'Bebas Neue'; font-size:1.5rem; padding:0 15px; cursor:pointer;">AGREGAR</button>
+            </div>
+            <div id="listaMotivosContainer" style="flex:1; overflow-y:auto; border: 1px solid #333; padding:10px; border-radius:5px; background:#0b0c10;"></div>
+            <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+                <button id="btnCerrarMotivos" style="padding:8px 25px; background:#333; color:#fff; border:none; font-family:'Bebas Neue'; font-size:1.5rem; cursor:pointer;">CERRAR</button>
             </div>
         </div>
     </div>
@@ -71,7 +116,7 @@
                 <tr id="thead-prepiking">
                     <th>Asesor</th><th>Fecha</th><th>Hora</th><th>Folio</th>
                     <th>Cliente</th><th>Vehículo</th><th>Serie (VIN)</th><th>Placas</th><th>Servicio</th>
-                    <th>Asistencia</th><th>Calificación</th><th>Comentarios</th>
+                    <th>Asistencia</th><th>Calificación</th><th>Comentarios</th><th>Acción</th>
                 </tr>
             </thead>
             <tbody id="tbody-prepiking"></tbody>
@@ -88,6 +133,18 @@
                 </tr>
             </thead>
             <tbody id="tbody-noshow"></tbody>
+        </table>
+    </div>
+
+    <!-- TABLA ENTREGADOS (7 DÍAS) -->
+    <div class="table-container" id="tab-entregados">
+        <table id="tabla-entregados">
+            <thead>
+                <tr id="thead-entregados">
+                    <th>Asesor</th><th>Fecha Cita</th><th>Folio</th><th>Cliente</th><th>Vehículo</th><th>Placas</th><th>Calificación</th><th>Fecha de Entrega</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-entregados"></tbody>
         </table>
     </div>
 
